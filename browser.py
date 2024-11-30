@@ -17,6 +17,7 @@ class URL:
         self.host, url = url.split("/", 1)
         if ":" in self.host:
             self.host, port = self.host.split(":", 1)
+            # TODO: reassigning port, check for conflicts with http/s, where self.port would be 80/443 and not the custom port e.g 8080, 3000 etc.
             self.port = int(port)
         self.path = "/" + url
 
