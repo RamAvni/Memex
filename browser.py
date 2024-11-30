@@ -6,8 +6,15 @@ USER_AGENT = "Memex"
 
 class URL:
     def __init__(self, url):
-        self.scheme, url = url.split("://", 1)
-        assert self.scheme in ["http", "https", "file"]
+        if url.startswith("data"):
+            self.scheme, url = url.split(":", 1)
+            self.mime, url = url.split(",", 1)
+            self.content = url
+            return
+        else:
+            self.scheme, url = url.split("://", 1)
+
+        assert self.scheme in ["http", "https", "file", "data"]
 
         if self.scheme == "http":
             self.port = 80
@@ -16,11 +23,14 @@ class URL:
 
         if "/" not in url:
             url += "/"
+
         self.host, url = url.split("/", 1)
-        if ":" in self.host:
+
+        if hasattr(self, "host") and ":" in self.host:
             self.host, port = self.host.split(":", 1)
             # TODO: reassigning port, check for conflicts with http/s, where self.port would be 80/443 and not the custom port e.g 8080, 3000 etc.
             self.port = int(port)
+
         self.path = "/" + url
 
     def request(self):
@@ -37,6 +47,8 @@ class URL:
             s = context.wrap_socket(s, server_hostname=self.host)
         elif self.scheme == "file":
             return open((self.host + self.path).rstrip("/"), "r")
+        elif self.scheme == "data":
+            return self.content
 
         # Establish Connection
         s.connect((self.host, self.port))
@@ -99,7 +111,7 @@ def load(url):
 if __name__ == "__main__":
     import sys
 
-    try:
-        load(URL(sys.argv[1]))
-    except:
-        show(open("/home/ram-avni/textToOpen.txt", "r"))
+    # try:
+    load(URL(sys.argv[1]))
+    # except:
+    #     show(open("/home/ram-avni/textToOpen.txt", "r"))
