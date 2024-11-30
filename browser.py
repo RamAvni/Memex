@@ -99,4 +99,7 @@ def load(url):
 if __name__ == "__main__":
     import sys
 
-    load(URL(sys.argv[1]))
+    try:
+        load(URL(sys.argv[1]))
+    except:
+        show(open("/home/ram-avni/textToOpen.txt", "r"))
