@@ -37,7 +37,7 @@ class URL:
         # Establish Connection
         s.connect((self.host, self.port))
 
-        # Create Request
+        # Create Request and its Header
         request = "GET {} HTTP/1.0\r\n".format(self.path)
         request += "Host: {}\r\n".format(self.host)
         request += "\r\n"
