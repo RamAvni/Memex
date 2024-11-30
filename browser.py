@@ -111,7 +111,7 @@ def load(url):
 if __name__ == "__main__":
     import sys
 
-    # try:
-    load(URL(sys.argv[1]))
-    # except:
-    #     show(open("/home/ram-avni/textToOpen.txt", "r"))
+    try:
+        load(URL(sys.argv[1]))
+    except:
+        show(open("/home/ram-avni/textToOpen.txt", "r"))
