@@ -1,6 +1,8 @@
 import socket
 import ssl
 
+USER_AGENT = "Memex"
+
 
 class URL:
     def __init__(self, url):
@@ -38,8 +40,18 @@ class URL:
         s.connect((self.host, self.port))
 
         # Create Request and its Header
-        request = "GET {} HTTP/1.0\r\n".format(self.path)
-        request += "Host: {}\r\n".format(self.host)
+        # request = "GET {} HTTP/1.1\r\n".format(self.path)
+        # request += "Host: {}\r\n".format(self.host)
+        # request += "Connection: close\r\n"
+        # request += "User-Agent: {}\r\n".format(USER_AGENT)
+
+        request = f"""GET {self.path} HTTP/1.1\r
+Host: {self.host}\r
+Connection: close\r
+User-Agent: {USER_AGENT}\r
+"""  # Requests must end in a line break.
+
+        print("request: ", request)
         request += "\r\n"
 
         # Send Request
