@@ -99,6 +99,10 @@ def show(body):
             in_tag = True
         if char == ">":
             in_tag = False
+        elif char == "&lt;":
+            print("<", end="")
+        elif char == "&gt;":
+            print(">", end="")
         elif not in_tag:
             print(char, end="")
 
