@@ -1,6 +1,8 @@
 import socket
 import ssl
 
+# TODO: htmlsoup
+
 USER_AGENT = "Memex"
 
 
@@ -9,16 +11,16 @@ class URL:
         if url.startswith("data"):
             self.scheme, url = url.split(":", 1)
             self.mime, url = url.split(",", 1)
-            self.content = url
+            self.dataContent = url
             return
         else:
             self.scheme, url = url.split("://", 1)
-
-        assert self.scheme in ["http", "https", "file", "data"]
-
-        if self.scheme == "http":
+        print(self.scheme)
+        assert self.scheme in ["http", "https", "file", "data", "view-source:http"]
+        print("I am here")
+        if self.scheme in ["http", "view-source:http"]:
             self.port = 80
-        elif self.scheme == "https":
+        elif self.scheme in ["https", "view-source:https"]:
             self.port = 443
 
         if "/" not in url:
@@ -34,6 +36,10 @@ class URL:
         self.path = "/" + url
 
     def request(self):
+
+        if self.scheme == "data":
+            return self.dataContent
+
         # Create socket
         s = socket.socket(
             family=socket.AF_INET,
@@ -47,8 +53,6 @@ class URL:
             s = context.wrap_socket(s, server_hostname=self.host)
         elif self.scheme == "file":
             return open((self.host + self.path).rstrip("/"), "r")
-        elif self.scheme == "data":
-            return self.content
 
         # Establish Connection
         s.connect((self.host, self.port))
@@ -70,6 +74,9 @@ User-Agent: {USER_AGENT}\r
         response = s.makefile("r", encoding="utf8", newline="\r\n")
         statusline = response.readline()
         version, status, explanation = statusline.split(" ", 2)
+
+        if self.scheme == "view-source:http":
+            return response
 
         response_headers = {}
         while True:
@@ -134,7 +141,7 @@ def load(url):
 if __name__ == "__main__":
     import sys
 
-    try:
-        load(URL(sys.argv[1]))
-    except:
-        show(open("/home/ram-avni/textToOpen.txt", "r"))
+    # try:
+    load(URL(sys.argv[1]))
+    # except:
+    # show(open("/home/ram-avni/textToOpen.txt", "r"))
