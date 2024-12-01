@@ -93,18 +93,37 @@ User-Agent: {USER_AGENT}\r
 
 
 def show(body):
+
+    # TODO: doesn't print &lt;div&gt correctly
+
     in_tag = False
+    entity_counter = []
     for char in body:
         if char == "<":
             in_tag = True
         if char == ">":
             in_tag = False
-        elif char == "&lt;":
-            print("<", end="")
-        elif char == "&gt;":
-            print(">", end="")
         elif not in_tag:
-            print(char, end="")
+            if char in "&lgt;":
+                entity_counter.append(char)
+            else:
+                for c in entity_counter:
+                    print(c, end="")
+                entity_counter = []
+
+                print(char, end="")
+
+        if "".join(entity_counter) in "&lt;" or "".join(entity_counter) in "&gt;":
+            if "".join(entity_counter) == "&lt;":
+                print("<", end="")
+                entity_counter = []
+            elif "".join(entity_counter) == "&gt;":
+                print(">", end="")
+                entity_counter = []
+
+    if len(entity_counter):  # If anything remains in entity_counter
+        for c in entity_counter:
+            print(c, end="")
 
 
 def load(url):
