@@ -15,9 +15,7 @@ class URL:
             return
         else:
             self.scheme, url = url.split("://", 1)
-        print(self.scheme)
         assert self.scheme in ["http", "https", "file", "data", "view-source:http"]
-        print("I am here")
         if self.scheme in ["http", "view-source:http"]:
             self.port = 80
         elif self.scheme in ["https", "view-source:https"]:
@@ -37,22 +35,25 @@ class URL:
 
     def request(self):
 
-        if self.scheme == "data":
-            return self.dataContent
+        if not hasattr(self, "savedSocket"):
+            if self.scheme == "data":
+                return self.dataContent
 
-        # Create socket
-        s = socket.socket(
-            family=socket.AF_INET,
-            type=socket.SOCK_STREAM,
-            proto=socket.IPPROTO_TCP,
-        )
+            # Create socket
+            s = socket.socket(
+                family=socket.AF_INET,
+                type=socket.SOCK_STREAM,
+                proto=socket.IPPROTO_TCP,
+            )
 
-        # Handle requests by scheme
-        if self.scheme == "https":  # Create secure connection wrapper is 'https'
-            context = ssl.create_default_context()
-            s = context.wrap_socket(s, server_hostname=self.host)
-        elif self.scheme == "file":
-            return open((self.host + self.path).rstrip("/"), "r")
+            # Handle requests by scheme
+            if self.scheme == "https":  # Create secure connection wrapper is 'https'
+                context = ssl.create_default_context()
+                s = context.wrap_socket(s, server_hostname=self.host)
+            elif self.scheme == "file":
+                return open((self.host + self.path).rstrip("/"), "r")
+        else:
+            s = self.savedSocket
 
         # Establish Connection
         s.connect((self.host, self.port))
@@ -60,11 +61,10 @@ class URL:
         # Create Request and its Header
         request = f"""GET {self.path} HTTP/1.1\r
 Host: {self.host}\r
-Connection: close\r
+Connection: Keep-Alive\r
 User-Agent: {USER_AGENT}\r
 """  # Requests must end in a line break.
 
-        print("request: ", request)
         request += "\r\n"
 
         # Send Request
@@ -72,6 +72,7 @@ User-Agent: {USER_AGENT}\r
 
         # Handle Response
         response = s.makefile("r", encoding="utf8", newline="\r\n")
+
         statusline = response.readline()
         version, status, explanation = statusline.split(" ", 2)
 
@@ -91,18 +92,15 @@ User-Agent: {USER_AGENT}\r
         assert "content-encoding" not in response_headers
 
         # Save content
-        content = response.read()
+        content = response.read(int(response_headers["content-length"]))
 
-        # Close connection
-        s.close()
+        # Save Socket
+        self.savedSocket = s
 
         return content
 
 
 def show(body):
-
-    # TODO: doesn't print &lt;div&gt correctly
-
     in_tag = False
     entity_counter = []
     for char in body:
@@ -141,7 +139,8 @@ def load(url):
 if __name__ == "__main__":
     import sys
 
-    # try:
-    load(URL(sys.argv[1]))
-    # except:
-    # show(open("/home/ram-avni/textToOpen.txt", "r"))
+    try:
+        load(URL(sys.argv[1]))
+    except Exception as e:
+        show(open("/home/ram-avni/textToOpen.txt", "r"))
+        print("\n\n\n\n" + e.__str__())
