@@ -63,9 +63,6 @@ User-Agent: {USER_AGENT}\r
             return open((self.host + self.path).rstrip("/"), "r")
 
         if not hasattr(self, "savedSocket"):
-            if self.scheme == "data":
-                return self.dataContent
-
             # Create socket
             s = socket.socket(
                 family=socket.AF_INET,
