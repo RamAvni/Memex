@@ -103,11 +103,11 @@ User-Agent: {USER_AGENT}\r
         # Handle redirects
         if 300 <= int(status) < 400 and response_headers["location"]:
             location = response_headers["location"]
-            if response_headers["location"].startswith("/"):
-                redirectedUrl = URL(f"{self.scheme}://{self.host}{location}")
+            if location.startswith("/"):
+                redirectURL = URL(f"{self.scheme}://{self.host}{location}")
             else:
-                redirectedUrl = URL(response_headers["location"])
-            return redirectedUrl.request()
+                redirectURL = URL(location)
+            return redirectURL.request()
 
         # Check if out data is being sent in an unusual way.
         assert (
