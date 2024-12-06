@@ -34,6 +34,33 @@ class URL:
         self.path = "/" + url
 
     def request(self):
+        def createRequest():
+            # Create Request and its Header
+            request = f"""GET {self.path} HTTP/1.1\r
+Host: {self.host}\r
+Connection: Keep-Alive\r
+User-Agent: {USER_AGENT}\r
+"""  # Requests must end in a line break.
+
+            request += "\r\n"
+
+            return request
+
+        def getResponseHeaders(response):
+            response_headers = {}
+            while True:
+                line = response.readline()
+                if line == "\r\n":
+                    break
+                header, value = line.split(":", 1)
+                response_headers[header.casefold()] = value.strip()
+
+            return response_headers
+
+        if self.scheme == "data":
+            return self.dataContent
+        elif self.scheme == "file":
+            return open((self.host + self.path).rstrip("/"), "r")
 
         if not hasattr(self, "savedSocket"):
             if self.scheme == "data":
@@ -79,13 +106,9 @@ User-Agent: {USER_AGENT}\r
         if self.scheme == "view-source:http":
             return response
 
-        response_headers = {}
-        while True:
-            line = response.readline()
-            if line == "\r\n":
-                break
-            header, value = line.split(":", 1)
-            response_headers[header.casefold()] = value.strip()
+        response_headers = getResponseHeaders(response)
+
+        print(response_headers)
 
         # Check if out data is being sent in an unusual way.
         assert "transfer-encoding" not in response_headers
