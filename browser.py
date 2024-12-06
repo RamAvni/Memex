@@ -102,8 +102,12 @@ User-Agent: {USER_AGENT}\r
         print(response_headers)
 
         # Check if out data is being sent in an unusual way.
-        assert "transfer-encoding" not in response_headers
-        assert "content-encoding" not in response_headers
+        assert (
+            "transfer-encoding" not in response_headers
+        ), "transfer-encoding is in response_headers"
+        assert (
+            "content-encoding" not in response_headers
+        ), "content-encoding is in response_headers"
 
         # Save content
         content = response.read(int(response_headers["content-length"]))
@@ -157,4 +161,5 @@ if __name__ == "__main__":
         load(URL(sys.argv[1]))
     except Exception as e:
         show(open("/home/ram-avni/textToOpen.txt", "r"))
-        print("\n\n\n\n" + e.__str__())
+        print("\n\n\n\nError:")
+        print(e)
