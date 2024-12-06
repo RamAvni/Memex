@@ -77,8 +77,6 @@ User-Agent: {USER_AGENT}\r
             if self.scheme == "https":  # Create secure connection wrapper is 'https'
                 context = ssl.create_default_context()
                 s = context.wrap_socket(s, server_hostname=self.host)
-            elif self.scheme == "file":
-                return open((self.host + self.path).rstrip("/"), "r")
         else:
             s = self.savedSocket
 
