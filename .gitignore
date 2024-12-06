@@ -1,0 +1,3 @@
+localCache/*
+!localCache/file.gitkeep
+check.py
