@@ -1,3 +1,2 @@
 localCache/*
-!localCache/check.txt
 check.py
