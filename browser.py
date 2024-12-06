@@ -83,16 +83,12 @@ User-Agent: {USER_AGENT}\r
             s = self.savedSocket
 
         # Establish Connection
-        s.connect((self.host, self.port))
+        try:
+            s.connect((self.host, self.port))
+        except socket.error as exc:
+            print("Caught exception socket.error : %s" % exc.errno)
 
-        # Create Request and its Header
-        request = f"""GET {self.path} HTTP/1.1\r
-Host: {self.host}\r
-Connection: Keep-Alive\r
-User-Agent: {USER_AGENT}\r
-"""  # Requests must end in a line break.
-
-        request += "\r\n"
+        request = createRequest()
 
         # Send Request
         s.send(request.encode("utf8"))
