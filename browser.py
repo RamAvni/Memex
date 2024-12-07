@@ -1,5 +1,6 @@
 import socket
 import ssl
+import os
 
 # TODO: htmlsoup
 
@@ -33,10 +34,10 @@ class URL:
 
         self.path = "/" + url
 
-    def request(self):
+    def request(self, HttpMethod):
         def createRequest():
             # Create Request and its Header
-            request = f"""GET {self.path} HTTP/1.1\r
+            request = f"""{HttpMethod} {self.path} HTTP/1.1\r
 Host: {self.host}\r
 Connection: Keep-Alive\r
 User-Agent: {USER_AGENT}\r
@@ -56,6 +57,18 @@ User-Agent: {USER_AGENT}\r
                 response_headers[header.casefold()] = value.strip()
 
             return response_headers
+
+        def cache(fileName, extension, content):
+            hostDirectoryCachePath = f"localCache/{self.host}"
+            newFilePath = f"{hostDirectoryCachePath}/{fileName}.{extension}"
+
+            # Create host's cache directory if it doesn't exist
+            if not os.path.isdir(hostDirectoryCachePath):
+                os.mkdir(hostDirectoryCachePath)
+
+            newFile = open(newFilePath, "w")
+            newFile.write(content)
+            newFile.close()
 
         if self.scheme == "data":
             return self.dataContent
@@ -107,7 +120,7 @@ User-Agent: {USER_AGENT}\r
                 redirectURL = URL(f"{self.scheme}://{self.host}{location}")
             else:
                 redirectURL = URL(location)
-            return redirectURL.request()
+            return redirectURL.request(HttpMethod)
 
         # Check if out data is being sent in an unusual way.
         assert (
@@ -116,13 +129,39 @@ User-Agent: {USER_AGENT}\r
         assert (
             "content-encoding" not in response_headers
         ), "content-encoding is in response_headers"
+        if "cache-control" in response_headers:
+            assert response_headers["cache-control"] in [
+                "no-store",
+                "max-age",
+            ], f"Unsupported cache-control: {response_headers['cache-control']}"
 
-        # Save content
-        content = response.read(int(response_headers["content-length"]))
+        # Get content
+        if os.path.isfile(
+            f"localCache/{self.host}/{response_headers['etag'][1:-1]}.{response_headers["content-type"].split("/")[1]}"
+        ):
+            print("Read file from cache")
+            cachedFile = open(
+                f"localCache/{self.host}/{response_headers['etag'][1:-1]}.{response_headers["content-type"].split("/")[1]}"
+            )
+            content = cachedFile.read()
+            cachedFile.close()
+        else:
+            print("Read file from response")
+            content = response.read(int(response_headers["content-length"]))[1:-1]
 
         # Save Socket
         self.savedSocket = s
 
+        if (
+            HttpMethod == "GET"
+            and int(status) == 200
+            and "cache-control" in response_headers
+        ):
+            cache(
+                response_headers["etag"][1:-1],
+                response_headers["content-type"].split("/")[1],
+                content,
+            )
         return content
 
 
@@ -158,7 +197,7 @@ def show(body):
 
 
 def load(url):
-    content = url.request()
+    content = url.request("GET")
     show(content)
 
 
