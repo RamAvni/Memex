@@ -1,6 +1,7 @@
 import socket
 import ssl
 import os
+import gzip
 
 # TODO: htmlsoup
 
@@ -41,6 +42,7 @@ class URL:
 Host: {self.host}\r
 Connection: Keep-Alive\r
 User-Agent: {USER_AGENT}\r
+Accept-Encoding: gzip\r
 """  # Requests must end in a line break.
 
             request += "\r\n"
@@ -50,7 +52,7 @@ User-Agent: {USER_AGENT}\r
         def getResponseHeaders(response):
             response_headers = {}
             while True:
-                line = response.readline()
+                line = response.readline().decode("utf-8")
                 if line == "\r\n":
                     break
                 header, value = line.split(":", 1)
@@ -102,9 +104,9 @@ User-Agent: {USER_AGENT}\r
         s.send(request.encode("utf8"))
 
         # Handle Response
-        response = s.makefile("r", encoding="utf8", newline="\r\n")
+        response = s.makefile("rb", newline="\r\n")
 
-        statusline = response.readline()
+        statusline = response.readline().decode("utf-8")
         version, status, explanation = statusline.split(" ", 2)
 
         if self.scheme == "view-source:http":
@@ -123,12 +125,6 @@ User-Agent: {USER_AGENT}\r
             return redirectURL.request(HttpMethod)
 
         # Check if out data is being sent in an unusual way.
-        assert (
-            "transfer-encoding" not in response_headers
-        ), "transfer-encoding is in response_headers"
-        assert (
-            "content-encoding" not in response_headers
-        ), "content-encoding is in response_headers"
         if "cache-control" in response_headers:
             assert response_headers["cache-control"] in [
                 "no-store",
@@ -145,6 +141,13 @@ User-Agent: {USER_AGENT}\r
             )
             content = cachedFile.read()
             cachedFile.close()
+        elif (
+            "content-encoding" in response_headers
+        ):  # TODO: there's currently no support if data isn't sent as "transfer-encoding: chunked"
+            chunkHexSize, body = response.read().split(b"\r\n", 1)
+            chunkSize = int(chunkHexSize, 16)
+            content = gzip.decompress(body[:chunkSize]).decode("utf-8")
+            print(content)
         else:
             print("Read file from response")
             content = response.read(int(response_headers["content-length"]))[1:-1]
