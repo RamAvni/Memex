@@ -41,6 +41,7 @@ class URL:
 Host: {self.host}\r
 Connection: Keep-Alive\r
 User-Agent: {USER_AGENT}\r
+Accept-Encoding: gzip\r
 """  # Requests must end in a line break.
 
             request += "\r\n"
