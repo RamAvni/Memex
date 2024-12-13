@@ -124,12 +124,6 @@ Accept-Encoding: gzip\r
             return redirectURL.request(HttpMethod)
 
         # Check if out data is being sent in an unusual way.
-        assert (
-            "transfer-encoding" not in response_headers
-        ), "transfer-encoding is in response_headers"
-        assert (
-            "content-encoding" not in response_headers
-        ), "content-encoding is in response_headers"
         if "cache-control" in response_headers:
             assert response_headers["cache-control"] in [
                 "no-store",
