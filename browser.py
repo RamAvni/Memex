@@ -1,6 +1,7 @@
 import socket
 import ssl
 import os
+import gzip
 
 # TODO: htmlsoup
 
@@ -51,7 +52,7 @@ Accept-Encoding: gzip\r
         def getResponseHeaders(response):
             response_headers = {}
             while True:
-                line = response.readline()
+                line = response.readline().decode("utf-8")
                 if line == "\r\n":
                     break
                 header, value = line.split(":", 1)
@@ -103,9 +104,9 @@ Accept-Encoding: gzip\r
         s.send(request.encode("utf8"))
 
         # Handle Response
-        response = s.makefile("r", encoding="utf8", newline="\r\n")
+        response = s.makefile("rb", newline="\r\n")
 
-        statusline = response.readline()
+        statusline = response.readline().decode("utf-8")
         version, status, explanation = statusline.split(" ", 2)
 
         if self.scheme == "view-source:http":
@@ -140,6 +141,13 @@ Accept-Encoding: gzip\r
             )
             content = cachedFile.read()
             cachedFile.close()
+        elif (
+            "content-encoding" in response_headers
+        ):  # TODO: there's currently no support if data isn't sent as "transfer-encoding: chunked"
+            chunkHexSize, body = response.read().split(b"\r\n", 1)
+            chunkSize = int(chunkHexSize, 16)
+            content = gzip.decompress(body[:chunkSize]).decode("utf-8")
+            print(content)
         else:
             print("Read file from response")
             content = response.read(int(response_headers["content-length"]))[1:-1]
@@ -205,9 +213,3 @@ if __name__ == "__main__":
         show(open("/home/ram-avni/textToOpen.txt", "r"))
         print("\n\n\n\nError:")
         print(e)
-
-
-# * ✓ 1. Your browser must send the Accept-Encoding header with the value gzip.
-# ? 2. If the server supports compression, its response will have a Content-Encoding header with value gzip. The body is then compressed. Add support for this case. - print the compressed response, see you got it.
-# ? 3. To decompress the data, you can use the decompress method in the gzip module. GZip data is not utf8-encoded, so pass "rb" to makefile to work with raw bytes instead.
-# ? 4. Most web servers send compressed data in a Transfer-Encoding called chunked.
