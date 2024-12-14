@@ -8,6 +8,7 @@ import tkinter
 
 USER_AGENT = "Memex"
 WIDTH, HEIGHT = 800, 600
+HORIZONTAL_STEP, VERTICAL_STEP = 20, 25
 
 
 class URL:
@@ -178,13 +179,21 @@ class Browser:
 
     def load(self, url):
         content = url.request("GET")
-        show(content)
+        text = lex(content)
+        cursor_x, cursor_y = HORIZONTAL_STEP, VERTICAL_STEP
+
         self.canvas.create_rectangle(10, 20, 400, 300)
         self.canvas.create_oval(100, 100, 150, 150)
-        self.canvas.create_text(200, 150, text="Hi!")
+        for c in text:
+            if cursor_x >= WIDTH - HORIZONTAL_STEP:
+                cursor_y += VERTICAL_STEP
+                cursor_x = HORIZONTAL_STEP
+            self.canvas.create_text(cursor_x, cursor_y, text=c)
+            cursor_x += HORIZONTAL_STEP
 
 
-def show(body):
+def lex(body):
+    text = ""
     in_tag = False
     entity_counter = []
     for char in body:
@@ -197,22 +206,24 @@ def show(body):
                 entity_counter.append(char)
             else:
                 for c in entity_counter:
-                    print(c, end="")
+                    text += c
                 entity_counter = []
 
-                print(char, end="")
+                text += char
 
         if "".join(entity_counter) in "&lt;" or "".join(entity_counter) in "&gt;":
             if "".join(entity_counter) == "&lt;":
-                print("<", end="")
+                text += "<"
                 entity_counter = []
             elif "".join(entity_counter) == "&gt;":
-                print(">", end="")
+                text += ">"
                 entity_counter = []
 
     if len(entity_counter):  # If anything remains in entity_counter
         for c in entity_counter:
-            print(c, end="")
+            text += c
+
+    return text
 
 
 if __name__ == "__main__":
@@ -222,6 +233,6 @@ if __name__ == "__main__":
         Browser().load(URL(sys.argv[1]))
         tkinter.mainloop()
     except Exception as e:
-        show(open("/home/ram-avni/textToOpen.txt", "r"))
+        lex(open("/home/ram-avni/textToOpen.txt", "r"))
         print("\n\n\n\nError:")
         print(e)
