@@ -9,6 +9,7 @@ import tkinter
 USER_AGENT = "Memex"
 WIDTH, HEIGHT = 800, 600
 HORIZONTAL_STEP, VERTICAL_STEP = 20, 25
+SCROLL_STEP = 100
 
 
 class URL:
@@ -177,19 +178,46 @@ class Browser:
         self.canvas = tkinter.Canvas(self.window, width=WIDTH, height=HEIGHT)
         self.canvas.pack()
 
-    def load(self, url):
-        content = url.request("GET")
-        text = lex(content)
-        cursor_x, cursor_y = HORIZONTAL_STEP, VERTICAL_STEP
+        # Scrolling
+        self.scroll = 0
+        self.window.bind("<Down>", self.scrollDown)
+        self.window.bind("<Up>", self.scrollUp)
 
-        self.canvas.create_rectangle(10, 20, 400, 300)
-        self.canvas.create_oval(100, 100, 150, 150)
+    def layout(self, text):  # * the book keeps this outside the browser class
+        display_list = []
+        cursor_x, cursor_y = HORIZONTAL_STEP, VERTICAL_STEP
         for c in text:
+            display_list.append((cursor_x, cursor_y, c))
             if cursor_x >= WIDTH - HORIZONTAL_STEP:
                 cursor_y += VERTICAL_STEP
                 cursor_x = HORIZONTAL_STEP
-            self.canvas.create_text(cursor_x, cursor_y, text=c)
+            # self.canvas.create_text(cursor_x, cursor_y, text=c)
             cursor_x += HORIZONTAL_STEP
+        return display_list
+
+    def draw(self):
+        self.canvas.delete("all")
+        for x, y, c in self.display_list:
+            if y > self.scroll + HEIGHT:
+                continue
+            if y + VERTICAL_STEP < self.scroll:
+                continue
+            self.canvas.create_text(x, y - self.scroll, text=c)
+
+    def load(self, url):
+        body = url.request("GET")
+        text = lex(body)
+        self.display_list = self.layout(text)
+        self.draw()
+
+    def scrollDown(self, e):
+        self.scroll += SCROLL_STEP
+        self.draw()
+
+    def scrollUp(self, e):
+        if self.scroll > 0:
+            self.scroll -= SCROLL_STEP
+            self.draw()
 
 
 def lex(body):
