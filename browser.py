@@ -176,6 +176,13 @@ class Browser:
         self.canvas = tkinter.Canvas(self.window, width=WIDTH, height=HEIGHT)
         self.canvas.pack()
 
+    def load(self, url):
+        content = url.request("GET")
+        show(content)
+        self.canvas.create_rectangle(10, 20, 400, 300)
+        self.canvas.create_oval(100, 100, 150, 150)
+        self.canvas.create_text(200, 150, text="Hi!")
+
 
 def show(body):
     in_tag = False
@@ -208,16 +215,12 @@ def show(body):
             print(c, end="")
 
 
-def load(url):
-    content = url.request("GET")
-    show(content)
-
-
 if __name__ == "__main__":
     import sys
 
     try:
-        load(URL(sys.argv[1]))
+        Browser().load(URL(sys.argv[1]))
+        tkinter.mainloop()
     except Exception as e:
         show(open("/home/ram-avni/textToOpen.txt", "r"))
         print("\n\n\n\nError:")
