@@ -182,6 +182,9 @@ class Browser:
         self.scroll = 0
         self.window.bind("<Down>", self.scrollDown)
         self.window.bind("<Up>", self.scrollUp)
+        # TODO: add windows and mac support
+        self.window.bind("<Button-4>", self.scrollUp)
+        self.window.bind("<Button-5>", self.scrollDown)
 
     def layout(self, text):  # * the book keeps this outside the browser class
         display_list = []
