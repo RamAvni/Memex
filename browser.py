@@ -2,6 +2,7 @@ import socket
 import ssl
 import os
 import gzip
+import tkinter
 
 # TODO: htmlsoup
 
