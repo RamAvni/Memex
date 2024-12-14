@@ -7,6 +7,7 @@ import tkinter
 # TODO: htmlsoup
 
 USER_AGENT = "Memex"
+WIDTH, HEIGHT = 800, 600
 
 
 class URL:
@@ -167,6 +168,13 @@ Accept-Encoding: gzip\r
                 content,
             )
         return content
+
+
+class Browser:
+    def __init__(self):
+        self.window = tkinter.Tk()
+        self.canvas = tkinter.Canvas(self.window, width=WIDTH, height=HEIGHT)
+        self.canvas.pack()
 
 
 def show(body):
