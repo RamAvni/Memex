@@ -188,7 +188,7 @@ class Browser:
         cursor_x, cursor_y = HORIZONTAL_STEP, VERTICAL_STEP
         for c in text:
             display_list.append((cursor_x, cursor_y, c))
-            if cursor_x >= WIDTH - HORIZONTAL_STEP:
+            if cursor_x >= WIDTH - HORIZONTAL_STEP or c == "\n":
                 cursor_y += VERTICAL_STEP
                 cursor_x = HORIZONTAL_STEP
             # self.canvas.create_text(cursor_x, cursor_y, text=c)
