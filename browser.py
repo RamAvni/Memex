@@ -2,10 +2,14 @@ import socket
 import ssl
 import os
 import gzip
+import tkinter
 
 # TODO: htmlsoup
 
 USER_AGENT = "Memex"
+WIDTH, HEIGHT = 800, 600
+HORIZONTAL_STEP, VERTICAL_STEP = 20, 25
+SCROLL_STEP = 100
 
 
 class URL:
@@ -168,7 +172,56 @@ Accept-Encoding: gzip\r
         return content
 
 
-def show(body):
+class Browser:
+    def __init__(self):
+        self.window = tkinter.Tk()
+        self.canvas = tkinter.Canvas(self.window, width=WIDTH, height=HEIGHT)
+        self.canvas.pack()
+
+        # Scrolling
+        self.scroll = 0
+        self.window.bind("<Down>", self.scrollDown)
+        self.window.bind("<Up>", self.scrollUp)
+
+    def layout(self, text):  # * the book keeps this outside the browser class
+        display_list = []
+        cursor_x, cursor_y = HORIZONTAL_STEP, VERTICAL_STEP
+        for c in text:
+            display_list.append((cursor_x, cursor_y, c))
+            if cursor_x >= WIDTH - HORIZONTAL_STEP:
+                cursor_y += VERTICAL_STEP
+                cursor_x = HORIZONTAL_STEP
+            # self.canvas.create_text(cursor_x, cursor_y, text=c)
+            cursor_x += HORIZONTAL_STEP
+        return display_list
+
+    def draw(self):
+        self.canvas.delete("all")
+        for x, y, c in self.display_list:
+            if y > self.scroll + HEIGHT:
+                continue
+            if y + VERTICAL_STEP < self.scroll:
+                continue
+            self.canvas.create_text(x, y - self.scroll, text=c)
+
+    def load(self, url):
+        body = url.request("GET")
+        text = lex(body)
+        self.display_list = self.layout(text)
+        self.draw()
+
+    def scrollDown(self, e):
+        self.scroll += SCROLL_STEP
+        self.draw()
+
+    def scrollUp(self, e):
+        if self.scroll > 0:
+            self.scroll -= SCROLL_STEP
+            self.draw()
+
+
+def lex(body):
+    text = ""
     in_tag = False
     entity_counter = []
     for char in body:
@@ -181,35 +234,33 @@ def show(body):
                 entity_counter.append(char)
             else:
                 for c in entity_counter:
-                    print(c, end="")
+                    text += c
                 entity_counter = []
 
-                print(char, end="")
+                text += char
 
         if "".join(entity_counter) in "&lt;" or "".join(entity_counter) in "&gt;":
             if "".join(entity_counter) == "&lt;":
-                print("<", end="")
+                text += "<"
                 entity_counter = []
             elif "".join(entity_counter) == "&gt;":
-                print(">", end="")
+                text += ">"
                 entity_counter = []
 
     if len(entity_counter):  # If anything remains in entity_counter
         for c in entity_counter:
-            print(c, end="")
+            text += c
 
-
-def load(url):
-    content = url.request("GET")
-    show(content)
+    return text
 
 
 if __name__ == "__main__":
     import sys
 
     try:
-        load(URL(sys.argv[1]))
+        Browser().load(URL(sys.argv[1]))
+        tkinter.mainloop()
     except Exception as e:
-        show(open("/home/ram-avni/textToOpen.txt", "r"))
+        lex(open("/home/ram-avni/textToOpen.txt", "r"))
         print("\n\n\n\nError:")
         print(e)
