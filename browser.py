@@ -179,7 +179,7 @@ class Browser:
     def __init__(self):
         self.window = tkinter.Tk()
         self.canvas = tkinter.Canvas(self.window, width=WIDTH, height=HEIGHT)
-        self.canvas.pack()
+        self.canvas.pack(fill="both", expand=1)
 
         # Scrolling
         self.scroll = 0
@@ -189,12 +189,16 @@ class Browser:
         self.window.bind("<Button-4>", self.scrollUp)
         self.window.bind("<Button-5>", self.scrollDown)
 
+        # Resizing
+        self.window.bind("<Configure>", self.resize)
+
     def layout(self, text):  # * the book keeps this outside the browser class
         display_list = []
         cursor_x, cursor_y = HORIZONTAL_STEP, VERTICAL_STEP
         for c in text:
             display_list.append((cursor_x, cursor_y, c))
-            if cursor_x >= WIDTH - HORIZONTAL_STEP or c == "\n":
+            windowWidth = self.window.winfo_width()
+            if cursor_x >= windowWidth - HORIZONTAL_STEP or c == "\n":
                 cursor_y += VERTICAL_STEP
                 cursor_x = HORIZONTAL_STEP
             # self.canvas.create_text(cursor_x, cursor_y, text=c)
@@ -204,7 +208,7 @@ class Browser:
     def draw(self):
         self.canvas.delete("all")
         for x, y, c in self.display_list:
-            if y > self.scroll + HEIGHT:
+            if y > self.scroll + self.window.winfo_height():
                 continue
             if y + VERTICAL_STEP < self.scroll:
                 continue
@@ -212,8 +216,8 @@ class Browser:
 
     def load(self, url):
         body = url.request("GET")
-        text = lex(body)
-        self.display_list = self.layout(text)
+        self.text = lex(body)
+        self.display_list = self.layout(self.text)
         self.draw()
 
     def scrollDown(self, e):
@@ -224,6 +228,14 @@ class Browser:
         if self.scroll > 0:
             self.scroll -= SCROLL_STEP
             self.draw()
+
+    def resize(self, e):
+        self.window.config(
+            width=self.window.winfo_width(),
+            height=self.window.winfo_height(),
+        )
+        self.display_list = self.layout(self.text)
+        self.draw()
 
 
 def lex(body):
