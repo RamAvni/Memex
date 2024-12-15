@@ -150,6 +150,7 @@ Accept-Encoding: gzip\r
         ):  # TODO: there's currently no support if data isn't sent as "transfer-encoding: chunked"
             chunkHexSize, body = response.read().split(b"\r\n", 1)
             chunkSize = int(chunkHexSize, 16)
+            body += response.read(chunkSize)
             content = gzip.decompress(body[:chunkSize]).decode("utf-8")
             print(content)
         else:
