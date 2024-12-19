@@ -183,6 +183,7 @@ class Browser:
 
         # Scrolling
         self.scroll = 0
+        self.bottom = 0
         self.window.bind("<Down>", self.scrollDown)
         self.window.bind("<Up>", self.scrollUp)
         # TODO: add windows and mac support
@@ -214,6 +215,10 @@ class Browser:
                 continue
             self.canvas.create_text(x, y - self.scroll, text=c)
 
+        # Find bottom of page for each new draw
+        self.bottom = self.display_list[-1][1]
+        print("last y: ", self.bottom)
+
     def load(self, url):
         body = url.request("GET")
         self.text = lex(body)
@@ -221,8 +226,11 @@ class Browser:
         self.draw()
 
     def scrollDown(self, e):
-        self.scroll += SCROLL_STEP
-        self.draw()
+        if self.scroll < self.bottom:
+            self.scroll += SCROLL_STEP
+            self.draw()
+        else:
+            print("reached bottom!")
 
     def scrollUp(self, e):
         if self.scroll > 0:
