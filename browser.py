@@ -213,8 +213,11 @@ class Browser:
     def draw(self):
         self.canvas.delete("all")
         self.bottom = self.display_list[-1][1]
+        self.yOfCurrentBottomVisibleChar = (
+            self.scroll + self.window.winfo_height()
+        )  # TODO: its not even the y of the most bottom char. the name is wrong. and long.
         for x, y, c in self.display_list:
-            if y > self.scroll + self.window.winfo_height():
+            if y > self.yOfCurrentBottomVisibleChar:
                 continue
             if y + VERTICAL_STEP < self.scroll:
                 continue
@@ -222,21 +225,22 @@ class Browser:
             # Find bottom of page for each new draw
             self.canvas.create_text(x, y - self.scroll, text=c)
 
-        # ! print("last y: ", self.bottom)
-        print("last y: ", self.bottom)
         self.canvas.create_rectangle(
             self.window.winfo_width() - 35,
             0,
             self.window.winfo_width(),
-            (self.scroll / self.bottom) * self.window.winfo_height(),
+            # * self.scroll refers to the characters at the top, while self.bottom to the most bottom one. this is why we remove the window height from self.bottom, to adjust between the two.
+            (self.scroll / (self.bottom - self.window.winfo_height()))
+            * self.window.winfo_height(),
             fill="gray",
         )
         print(
             "scroll, bottom",
             self.scroll,
             self.bottom,
-            (self.scroll / self.bottom) * self.window.winfo_height(),
-            f"{self.scroll / self.bottom}%",
+            (self.scroll / (self.bottom - self.window.winfo_height()))
+            * self.window.winfo_height(),
+            f"{round(self.scroll / (self.bottom - self.window.winfo_height()) * 100)}%",
         )
         print(self.scroll, self.window.winfo_height())
 
@@ -247,7 +251,7 @@ class Browser:
         self.draw()
 
     def scrollDown(self, e):
-        if self.scroll < self.bottom:
+        if self.yOfCurrentBottomVisibleChar < self.bottom:
             self.scroll += SCROLL_STEP
             self.draw()
         else:
