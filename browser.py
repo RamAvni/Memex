@@ -180,6 +180,7 @@ class Browser:
         self.window = tkinter.Tk()
         self.canvas = tkinter.Canvas(self.window, width=WIDTH, height=HEIGHT)
         self.canvas.pack(fill="both", expand=1)
+        self.canvas.update()  # Force update with canvas parameters - eliminates canvas creating itself multiple times
 
         # Scrolling
         self.scroll = 0
@@ -196,28 +197,50 @@ class Browser:
     def layout(self, text):  # * the book keeps this outside the browser class
         display_list = []
         cursor_x, cursor_y = HORIZONTAL_STEP, VERTICAL_STEP
+
+        windowWidth = self.window.winfo_width()
+
         for c in text:
             display_list.append((cursor_x, cursor_y, c))
-            windowWidth = self.window.winfo_width()
             if cursor_x >= windowWidth - HORIZONTAL_STEP or c == "\n":
                 cursor_y += VERTICAL_STEP
                 cursor_x = HORIZONTAL_STEP
             # self.canvas.create_text(cursor_x, cursor_y, text=c)
             cursor_x += HORIZONTAL_STEP
+
         return display_list
 
     def draw(self):
         self.canvas.delete("all")
         for x, y, c in self.display_list:
+            if y > self.bottom:
+                self.bottom = y
+
             if y > self.scroll + self.window.winfo_height():
                 continue
             if y + VERTICAL_STEP < self.scroll:
                 continue
+            # ScrollBar
+            # Find bottom of page for each new draw
             self.canvas.create_text(x, y - self.scroll, text=c)
 
-        # Find bottom of page for each new draw
-        self.bottom = self.display_list[-1][1]
+        # ! print("last y: ", self.bottom)
         print("last y: ", self.bottom)
+        self.canvas.create_rectangle(
+            self.window.winfo_width() - 35,
+            0,
+            self.window.winfo_width(),
+            (self.scroll / self.bottom) * self.window.winfo_height(),
+            fill="gray",
+        )
+        print(
+            "scroll, bottom",
+            self.scroll,
+            self.bottom,
+            (self.scroll / self.bottom) * self.window.winfo_height(),
+            f"{self.scroll / self.bottom}%",
+        )
+        print(self.scroll, self.window.winfo_height())
 
     def load(self, url):
         body = url.request("GET")
