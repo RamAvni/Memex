@@ -212,10 +212,8 @@ class Browser:
 
     def draw(self):
         self.canvas.delete("all")
+        self.bottom = self.display_list[-1][1]
         for x, y, c in self.display_list:
-            if y > self.bottom:
-                self.bottom = y
-
             if y > self.scroll + self.window.winfo_height():
                 continue
             if y + VERTICAL_STEP < self.scroll:
