@@ -212,37 +212,42 @@ class Browser:
 
     def draw(self):
         self.canvas.delete("all")
-        self.bottom = self.display_list[-1][1]
-        self.yOfCurrentBottomVisibleChar = (
-            self.scroll + self.window.winfo_height()
-        )  # TODO: its not even the y of the most bottom char. the name is wrong. and long.
+        self.drawScrollBar()
         for x, y, c in self.display_list:
             if y > self.yOfCurrentBottomVisibleChar:
                 continue
             if y + VERTICAL_STEP < self.scroll:
                 continue
-            # ScrollBar
-            # Find bottom of page for each new draw
             self.canvas.create_text(x, y - self.scroll, text=c)
+
+    def drawScrollBar(self):
+        # ScrollBar
+        # Find bottom of page for each new draw
+        self.bottom = self.display_list[-1][1]
+        self.yOfCurrentBottomVisibleChar = (
+            self.scroll + self.window.winfo_height()
+        )  # TODO: its not even the y of the most bottom char. the name is wrong. and long.
+
+        # * self.scroll refers to the characters at the top, while self.bottom to the most bottom one. this is why we remove the window height from self.bottom, to adjust between the two.
+        scrollBarBottom = (
+            self.scroll / (self.bottom - self.window.winfo_height())
+        ) * self.window.winfo_height()
 
         self.canvas.create_rectangle(
             self.window.winfo_width() - 35,
-            0,
+            scrollBarBottom - 100,
             self.window.winfo_width(),
-            # * self.scroll refers to the characters at the top, while self.bottom to the most bottom one. this is why we remove the window height from self.bottom, to adjust between the two.
-            (self.scroll / (self.bottom - self.window.winfo_height()))
-            * self.window.winfo_height(),
+            scrollBarBottom,
             fill="gray",
         )
         print(
             "scroll, bottom",
             self.scroll,
             self.bottom,
-            (self.scroll / (self.bottom - self.window.winfo_height()))
-            * self.window.winfo_height(),
+            self.yOfCurrentBottomVisibleChar,
+            scrollBarBottom,
             f"{round(self.scroll / (self.bottom - self.window.winfo_height()) * 100)}%",
         )
-        print(self.scroll, self.window.winfo_height())
 
     def load(self, url):
         body = url.request("GET")
