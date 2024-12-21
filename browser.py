@@ -178,6 +178,7 @@ Accept-Encoding: gzip\r
 class Browser:
     def __init__(self):
         self.window = tkinter.Tk()
+        self.window.title("Memex")
         self.canvas = tkinter.Canvas(self.window, width=WIDTH, height=HEIGHT)
         self.canvas.pack(fill="both", expand=1)
 
